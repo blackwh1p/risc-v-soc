@@ -1,0 +1,53 @@
+# ============================================================
+# RISC-V SoC Project — .gitignore
+# ============================================================
+
+# --- Vivado generated files ---
+*.jou
+*.log
+*.str
+*.mif
+*.xpr
+*.bit
+*.ltx
+*.runs/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.sim/
+*.srcs/
+.Xil/
+vivado_pid*.str
+webtalk_*.xml
+webtalk*.jou
+webtalk*.log
+
+# --- Simulation output ---
+*.vvp
+*.vcd
+*.fst
+*.lxt
+
+# --- Compiled software ---
+*.elf
+*.bin
+*.hex
+*.map
+*.o
+*.a
+
+# --- Python cache ---
+__pycache__/
+*.pyc
+*.pyo
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+
+# --- Editor files ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
