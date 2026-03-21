@@ -47,7 +47,7 @@ risc-v-soc/
 
 | Tool | Purpose |
 |------|---------|
-| Xilinx Vivado 2023.2 | Synthesis, implementation, FPGA programming |
+| Xilinx Vivado 2025.2 | Synthesis, implementation, FPGA programming |
 | Icarus Verilog + GTKWave | RTL simulation and waveform viewing |
 | Verilator | Fast cycle-accurate simulation for ISA tests |
 | riscv64-unknown-elf-gcc | Cross-compiler for bare-metal C and Assembly |
