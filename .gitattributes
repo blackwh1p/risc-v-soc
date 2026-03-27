@@ -17,3 +17,7 @@ Makefile text eol=lf
 *.bit   binary
 *.bin   binary
 *.hex   binary
+
+# Tell GitHub Linguist to detect SystemVerilog
+*.sv linguist-language=SystemVerilog
+*.svh linguist-language=SystemVerilog
