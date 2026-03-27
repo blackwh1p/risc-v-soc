@@ -52,3 +52,11 @@ clean:
 	rm -f *.elf *.bin *.hex *.map
 	rm -f *.o *.a
 	@echo "Clean complete."
+
+# --- ALU Simulation ---
+sim_alu:
+	iverilog -g2012 -o sim_alu.vvp \
+		rtl/core/alu_ops.sv \
+		rtl/core/alu.sv \
+		tb/core/tb_alu.sv
+	vvp sim_alu.vvp
