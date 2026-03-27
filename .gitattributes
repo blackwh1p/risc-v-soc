@@ -1,0 +1,19 @@
+# Automatically normalize line endings
+* text=auto
+
+# Force LF for all source files
+*.sv    text eol=lf
+*.v     text eol=lf
+*.md    text eol=lf
+*.c     text eol=lf
+*.h     text eol=lf
+*.s     text eol=lf
+*.ld    text eol=lf
+*.sh    text eol=lf
+*.py    text eol=lf
+Makefile text eol=lf
+
+# Binary files — do not modify
+*.bit   binary
+*.bin   binary
+*.hex   binary
