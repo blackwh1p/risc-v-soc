@@ -62,4 +62,13 @@ package riscv_pkg;
     parameter logic [6:0] F7_ALT     = 7'b0100000; // SUB, SRA
     parameter logic [6:0] F7_MEXT    = 7'b0000001; // RV32M: MUL, DIV, REM
 
+    // --------------------------------------------------------
+    // FSM State definitions
+    // --------------------------------------------------------
+    parameter logic [2:0] STATE_FETCH     = 3'b000;
+    parameter logic [2:0] STATE_DECODE    = 3'b001;
+    parameter logic [2:0] STATE_EXECUTE   = 3'b010;
+    parameter logic [2:0] STATE_MEMORY    = 3'b011;
+    parameter logic [2:0] STATE_WRITEBACK = 3'b100;
+
 endpackage
