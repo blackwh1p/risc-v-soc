@@ -60,3 +60,10 @@ sim_alu:
 		rtl/core/alu.sv \
 		tb/core/tb_alu.sv
 	vvp sim_alu.vvp
+
+# --- Register File Simulation ---
+sim_regfile:
+	iverilog -g2012 -o sim_regfile.vvp \
+		rtl/core/register_file.sv \
+		tb/core/tb_register_file.sv
+	vvp sim_regfile.vvp

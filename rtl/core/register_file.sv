@@ -21,6 +21,16 @@ module register_file (
     input  logic [31:0] write_data      // value to write
 );
 
-    // Internal logic will be added in Phase 2
+    // 32 registers, each 32 bits wide
+    // registers[0] is never written — x0 is hardwired to zero
+    logic [31:0] registers [0:31];
+
+    always_ff @(posedge clk) begin
+        if (write_enable && write_addr != 5'b0)
+            registers[write_addr] <= write_data;
+    end
+
+    assign read_data_1 = (read_addr_1 == 5'b0) ? 32'b0 : registers[read_addr_1];
+    assign read_data_2 = (read_addr_2 == 5'b0) ? 32'b0 : registers[read_addr_2];
 
 endmodule
