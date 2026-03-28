@@ -1,0 +1,65 @@
+// ============================================================
+// File    : riscv_pkg.sv
+// Purpose : RISC-V RV32IM constant definitions
+//           Opcodes, funct3, funct7 values for instruction decode
+// ============================================================
+
+package riscv_pkg;
+
+    // --------------------------------------------------------
+    // Opcodes — bits [6:0] of every instruction
+    // --------------------------------------------------------
+    parameter logic [6:0] OP_R       = 7'b0110011; // R-type: ADD, SUB, AND, OR...
+    parameter logic [6:0] OP_I_ALU   = 7'b0010011; // I-type: ADDI, ANDI, ORI...
+    parameter logic [6:0] OP_I_LOAD  = 7'b0000011; // I-type: LW, LH, LB
+    parameter logic [6:0] OP_S       = 7'b0100011; // S-type: SW, SH, SB
+    parameter logic [6:0] OP_B       = 7'b1100011; // B-type: BEQ, BNE, BLT...
+    parameter logic [6:0] OP_JAL     = 7'b1101111; // J-type: JAL
+    parameter logic [6:0] OP_JALR    = 7'b1100111; // I-type: JALR
+    parameter logic [6:0] OP_LUI     = 7'b0110111; // U-type: LUI
+    parameter logic [6:0] OP_AUIPC   = 7'b0010111; // U-type: AUIPC
+    parameter logic [6:0] OP_SYSTEM  = 7'b1110011; // I-type: ECALL, EBREAK
+
+    // --------------------------------------------------------
+    // funct3 values — bits [14:12]
+    // Used together with opcode to identify exact instruction
+    // --------------------------------------------------------
+
+    // funct3 for R-type and I-type ALU operations
+    parameter logic [2:0] F3_ADD_SUB = 3'b000; // ADD, SUB, ADDI
+    parameter logic [2:0] F3_SLL     = 3'b001; // SLL, SLLI
+    parameter logic [2:0] F3_SLT     = 3'b010; // SLT, SLTI
+    parameter logic [2:0] F3_SLTU    = 3'b011; // SLTU, SLTIU
+    parameter logic [2:0] F3_XOR     = 3'b100; // XOR, XORI
+    parameter logic [2:0] F3_SR      = 3'b101; // SRL, SRA, SRLI, SRAI
+    parameter logic [2:0] F3_OR      = 3'b110; // OR, ORI
+    parameter logic [2:0] F3_AND     = 3'b111; // AND, ANDI
+
+    // funct3 for branch instructions
+    parameter logic [2:0] F3_BEQ     = 3'b000; // Branch if Equal
+    parameter logic [2:0] F3_BNE     = 3'b001; // Branch if Not Equal
+    parameter logic [2:0] F3_BLT     = 3'b100; // Branch if Less Than
+    parameter logic [2:0] F3_BGE     = 3'b101; // Branch if Greater or Equal
+    parameter logic [2:0] F3_BLTU    = 3'b110; // Branch if Less Than Unsigned
+    parameter logic [2:0] F3_BGEU    = 3'b111; // Branch if Greater or Equal Unsigned
+
+    // funct3 for load instructions
+    parameter logic [2:0] F3_LW      = 3'b010; // Load Word (32-bit)
+    parameter logic [2:0] F3_LH      = 3'b001; // Load Halfword (16-bit)
+    parameter logic [2:0] F3_LB      = 3'b000; // Load Byte (8-bit)
+
+    // funct3 for store instructions
+    parameter logic [2:0] F3_SW      = 3'b010; // Store Word (32-bit)
+    parameter logic [2:0] F3_SH      = 3'b001; // Store Halfword (16-bit)
+    parameter logic [2:0] F3_SB      = 3'b000; // Store Byte (8-bit)
+
+    // --------------------------------------------------------
+    // funct7 values — bits [31:25]
+    // Only used for R-type instructions to distinguish
+    // ADD vs SUB and SRL vs SRA
+    // --------------------------------------------------------
+    parameter logic [6:0] F7_NORMAL  = 7'b0000000; // ADD, SRL, and most R-type
+    parameter logic [6:0] F7_ALT     = 7'b0100000; // SUB, SRA
+    parameter logic [6:0] F7_MEXT    = 7'b0000001; // RV32M: MUL, DIV, REM
+
+endpackage
