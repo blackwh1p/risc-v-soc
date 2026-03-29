@@ -20,7 +20,7 @@ module cpu (
 );
 
     // Internal wires connecting control unit and datapath
-    
+
     logic [31:0] instruction;
     logic        alu_zero;
     logic [3:0]  alu_operation;
@@ -32,6 +32,9 @@ module cpu (
     logic        branch;
     logic        jump;
     logic [1:0]  pc_src;
+    logic        fetch_en;
+    logic        pc_write_en;
+    logic        alu_reg_en;
 
     control_unit u_control_unit (
     .clk            (clk),
@@ -46,7 +49,10 @@ module cpu (
     .mem_to_reg     (mem_to_reg),
     .branch         (branch),
     .jump           (jump),
-    .pc_src         (pc_src)
+    .pc_src         (pc_src),
+    .fetch_en       (fetch_en),
+    .pc_write_en    (pc_write_en),
+    .alu_reg_en     (alu_reg_en)
     );
 
     datapath u_datapath (
@@ -67,7 +73,10 @@ module cpu (
     .dmem_read_en       (dmem_read_en),
     .dmem_read_data     (dmem_read_data),
     .instruction    (instruction),
-    .alu_zero       (alu_zero)
+    .alu_zero       (alu_zero),
+    .fetch_en       (fetch_en),
+    .pc_write_en    (pc_write_en),
+    .alu_reg_en     (alu_reg_en)
     );
 
 endmodule

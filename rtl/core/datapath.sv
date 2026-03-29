@@ -19,6 +19,9 @@ module datapath (
     input  logic        branch,
     input  logic        jump,
     input  logic [1:0]  pc_src,
+    input  logic        fetch_en,
+    input  logic        pc_write_en,
+    input  logic        alu_reg_en,
 
     // Instruction memory interface
     output logic [31:0] imem_addr,
@@ -48,6 +51,7 @@ module datapath (
     logic [31:0] rs2_data;        // register file read port 2
     logic [31:0] alu_operand_b;   // ALU second operand (reg or imm)
     logic [31:0] alu_result;      // ALU output
+    logic [31:0] alu_result_reg;  // holds ALU result between EXECUTE and WRITEBACK
     logic [31:0] write_back_data; // data to write to register file
     logic [4:0]  rs1;             // source register 1 index
     logic [4:0]  rs2;             // source register 2 index
@@ -62,7 +66,7 @@ module datapath (
     always_ff @(posedge clk) begin
         if (!rst_n)
             instr_reg <= 32'b0;
-        else
+        else if (fetch_en)
             instr_reg <= imem_data;
     end
 
@@ -80,9 +84,14 @@ module datapath (
     // --------------------------------------------------------
 
     always_ff @(posedge clk) begin
+        if (alu_reg_en)
+            alu_result_reg <= alu_result;
+    end
+
+    always_ff @(posedge clk) begin
         if (!rst_n)
             pc <= 32'b0;
-        else
+        else if (pc_write_en)
             pc <= pc_next;
     end
 
@@ -151,13 +160,13 @@ module datapath (
     // Write-back MUX
     // mem_to_reg = 0 → write ALU result
     // mem_to_reg = 1 → write memory data
-    assign write_back_data = mem_to_reg ? dmem_read_data : alu_result;
+    assign write_back_data = mem_to_reg ? dmem_read_data : alu_result_reg;
 
     // --------------------------------------------------------
     // Data memory connections
     // --------------------------------------------------------
 
-    assign dmem_addr       = alu_result;
+    assign dmem_addr       = alu_result_reg;
     assign dmem_write_data = rs2_data;
     assign dmem_write_en   = 0;  // will be driven by control unit later
     assign dmem_read_en    = 0;  // will be driven by control unit later

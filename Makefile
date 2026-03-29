@@ -67,3 +67,17 @@ sim_regfile:
 		rtl/core/register_file.sv \
 		tb/core/tb_register_file.sv
 	vvp sim_regfile.vvp
+
+# --- CPU Integration Simulation ---
+sim_cpu:
+	iverilog -g2012 -o sim_cpu.vvp \
+		rtl/core/alu_ops.sv \
+		rtl/core/riscv_pkg.sv \
+		rtl/core/alu.sv \
+		rtl/core/register_file.sv \
+		rtl/core/imm_gen.sv \
+		rtl/core/control_unit.sv \
+		rtl/core/datapath.sv \
+		rtl/core/cpu.sv \
+		tb/core/tb_cpu.sv
+	vvp sim_cpu.vvp

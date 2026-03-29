@@ -23,7 +23,10 @@ module control_unit (
     output logic        mem_to_reg,
     output logic        branch,
     output logic        jump,
-    output logic [1:0]  pc_src
+    output logic [1:0]  pc_src,
+    output logic        fetch_en,     // HIGH during STATE_FETCH only
+    output logic        pc_write_en,   // HIGH when PC should update
+    output logic        alu_reg_en    // HIGH during EXECUTE — captures ALU result
 );
 
     // --------------------------------------------------------
@@ -94,10 +97,16 @@ module control_unit (
         mem_to_reg    = 0;
         branch        = 0;
         jump          = 0;
+        fetch_en      = 0;
+        pc_write_en   = 0;
+        alu_reg_en    = 0;
         pc_src        = 2'b00;
 
         case (current_state)
+            STATE_FETCH:    fetch_en = 0;
+            STATE_DECODE:   fetch_en = 1;
             STATE_EXECUTE: begin
+                alu_reg_en = 1;
                 case (opcode)
                     OP_R: begin
                         case (funct3)
@@ -127,11 +136,13 @@ module control_unit (
                         alu_operation = ALU_SUB;
                         branch = 1;
                         pc_src = 2'b01;
+                        pc_write_en = 1;
                     end
 
                     OP_JAL, OP_JALR: begin
                         jump = 1;
                         pc_src = 2'b10;
+                        pc_write_en = 1;
                     end
 
                     default: begin
@@ -164,6 +175,7 @@ module control_unit (
             end
 
             STATE_WRITEBACK: begin
+                pc_write_en = 1;
                 case (opcode)
                     OP_I_LOAD: begin
                         reg_write = 1;
