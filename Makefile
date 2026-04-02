@@ -81,3 +81,38 @@ sim_cpu:
 		rtl/core/cpu.sv \
 		tb/core/tb_cpu.sv
 	vvp sim_cpu.vvp
+
+# --- IMEM Simulation ---
+sim_imem:
+	iverilog -g2012 -o sim_imem.vvp \
+		rtl/memory/imem.sv \
+		tb/memory/tb_imem.sv
+	vvp sim_imem.vvp
+
+# --- DMEM Simulation ---
+sim_dmem:
+	iverilog -g2012 -o sim_dmem.vvp \
+		rtl/memory/dmem.sv \
+		tb/memory/tb_dmem.sv
+	vvp sim_dmem.vvp
+
+# --- UART Simulation ---
+sim_uart:
+	iverilog -g2012 -o sim_uart.vvp \
+		rtl/peripheral/uart.sv \
+		tb/peripheral/tb_uart.sv
+	vvp sim_uart.vvp
+
+# --- Timer Simulation ---
+sim_timer:
+	iverilog -g2012 -o sim_timer.vvp \
+		rtl/peripheral/timer.sv \
+		tb/peripheral/tb_timer.sv
+	vvp sim_timer.vvp
+
+# --- GPIO Simulation ---
+sim_gpio:
+	iverilog -g2012 -o sim_gpio.vvp \
+		rtl/peripheral/gpio.sv \
+		tb/peripheral/tb_gpio.sv
+	vvp sim_gpio.vvp

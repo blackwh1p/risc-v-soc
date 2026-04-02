@@ -18,6 +18,13 @@ module imem #(
     output logic [31:0] data            // 32-bit instruction output
 );
 
-    // Internal logic will be added in Phase 3
+    logic [31:0] mem [0:MEM_DEPTH-1];
+
+    initial $readmemh(MEM_FILE, mem);
+
+    always @(posedge clk) begin
+        data <= mem[addr[31:2]];
+    end
+
 
 endmodule
