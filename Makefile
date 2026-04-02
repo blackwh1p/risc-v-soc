@@ -95,3 +95,10 @@ sim_dmem:
 		rtl/memory/dmem.sv \
 		tb/memory/tb_dmem.sv
 	vvp sim_dmem.vvp
+
+# --- UART Simulation ---
+sim_uart:
+	iverilog -g2012 -o sim_uart.vvp \
+		rtl/peripheral/uart.sv \
+		tb/peripheral/tb_uart.sv
+	vvp sim_uart.vvp
