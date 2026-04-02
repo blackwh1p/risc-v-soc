@@ -81,3 +81,17 @@ sim_cpu:
 		rtl/core/cpu.sv \
 		tb/core/tb_cpu.sv
 	vvp sim_cpu.vvp
+
+# --- IMEM Simulation ---
+sim_imem:
+	iverilog -g2012 -o sim_imem.vvp \
+		rtl/memory/imem.sv \
+		tb/memory/tb_imem.sv
+	vvp sim_imem.vvp
+
+# --- DMEM Simulation ---
+sim_dmem:
+	iverilog -g2012 -o sim_dmem.vvp \
+		rtl/memory/dmem.sv \
+		tb/memory/tb_dmem.sv
+	vvp sim_dmem.vvp
