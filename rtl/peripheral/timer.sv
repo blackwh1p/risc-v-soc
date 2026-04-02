@@ -31,7 +31,7 @@ module timer (
         end
         else begin
             // CPU writes to registers
-            if ( reg_write_en) begin
+            if (reg_write_en) begin
                 case (reg_addr)
                     4'h0: counter_reg <= reg_write_data;
                     4'h4: compare_reg <= reg_write_data;
