@@ -102,3 +102,10 @@ sim_uart:
 		rtl/peripheral/uart.sv \
 		tb/peripheral/tb_uart.sv
 	vvp sim_uart.vvp
+
+# --- Timer Simulation ---
+sim_timer:
+	iverilog -g2012 -o sim_timer.vvp \
+		rtl/peripheral/timer.sv \
+		tb/peripheral/tb_timer.sv
+	vvp sim_timer.vvp
