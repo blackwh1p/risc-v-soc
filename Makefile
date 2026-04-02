@@ -109,3 +109,10 @@ sim_timer:
 		rtl/peripheral/timer.sv \
 		tb/peripheral/tb_timer.sv
 	vvp sim_timer.vvp
+
+# --- GPIO Simulation ---
+sim_gpio:
+	iverilog -g2012 -o sim_gpio.vvp \
+		rtl/peripheral/gpio.sv \
+		tb/peripheral/tb_gpio.sv
+	vvp sim_gpio.vvp
