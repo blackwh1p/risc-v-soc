@@ -13,4 +13,4 @@ void uart_putc(char c);
 void uart_puts(const char* str);
 char uart_getc(void);
 
-#endif
+#endif // UART_H
