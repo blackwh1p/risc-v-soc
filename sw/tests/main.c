@@ -1,0 +1,43 @@
+// ============================================================
+// File    : main.c
+// Purpose : First bare-metal test program for RV32IM SoC
+//           Tests UART, GPIO, and Timer peripherals
+// ============================================================
+
+#include "../drivers/uart.h"
+#include "../drivers/gpio.h"
+#include "../drivers/timer.h"
+
+int main(void)
+{
+    // --- Step 1: Send boot message over UART ---
+    uart_puts("Hello, RISC-V!\n");
+
+    // --- Step 2: Set all GPIO pins as output ---
+    gpio_set_direction(0xFFFF);
+
+    // --- Step 3: Turn on all LEDs ---
+    gpio_write(0xFFFF);
+
+    // --- Step 4: Loop forever ---
+    while (1)
+    {
+        // --- Step 4a: Wait ~500ms using timer ---
+        timer_set(50000000);
+        while (timer_read() < 50000000) {
+            // busy wait
+        }
+
+        // --- Step 4b: Toggle LEDs ---
+        static unsigned int led_state = 0xFFFF;
+        led_state = (~led_state) & 0xFFFF; // toggle state
+        gpio_write(led_state); // write new state to GPIO
+
+        // --- Step 4c: Send tick message ---
+        uart_puts("Tick!\n");
+
+        // --- Step 4d: Clear timer ---
+        timer_clear();
+    }
+    return 0;
+}
