@@ -47,6 +47,17 @@ module control_unit (
     (* keep = "true" *) logic [2:0] current_state;
     (* keep = "true" *) logic [2:0] next_state;
 
+    logic [3:0] mul_wait_counter;
+
+    always_ff @(posedge clk) begin
+        if (!rst_n)
+            mul_wait_counter <= 4'b0;
+        else if (current_state == STATE_MUL_WAIT)
+            mul_wait_counter <= mul_wait_counter + 1;
+        else
+            mul_wait_counter <= 4'b0;
+    end
+
     always_ff @(posedge clk) begin
         if (rst_n == 0)
             current_state <= STATE_FETCH;
@@ -78,7 +89,13 @@ module control_unit (
                 endcase
             end
 
-            STATE_MUL_WAIT: next_state = STATE_WRITEBACK;
+            STATE_MUL_WAIT: begin
+                if (mul_wait_counter == 4'd9)
+                    next_state = STATE_WRITEBACK;
+                else
+                    next_state = STATE_MUL_WAIT;
+            end
+
             STATE_MEMORY: begin
                 case (opcode)
                     OP_I_LOAD: next_state = STATE_WRITEBACK;
@@ -193,7 +210,7 @@ module control_unit (
             // The control unit must hold the same alu_operation here — because
             // opcode/funct3/funct7 are still in instr_reg, they are stable.
             STATE_MUL_WAIT: begin
-                alu_reg_en = 1;
+                alu_reg_en = (mul_wait_counter == 4'd9) ? 1 : 0;
                 case (funct3)
                     3'b000:     alu_operation = ALU_MUL;
                     3'b001:     alu_operation = ALU_MULH;
