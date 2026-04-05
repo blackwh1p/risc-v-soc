@@ -16,12 +16,12 @@ module datapath (
     input  logic        alu_src_b,
     input  logic        reg_write,
     input  logic        mem_to_reg,
-    input  logic        branch,
-    input  logic        jump,
     input  logic [1:0]  pc_src,
     input  logic        fetch_en,
     input  logic        pc_write_en,
     input  logic        alu_reg_en,
+    input  logic        mem_read,
+    input  logic        mem_write,
 
     // Instruction memory interface
     output logic [31:0] imem_addr,
@@ -168,7 +168,7 @@ module datapath (
 
     assign dmem_addr       = alu_result_reg;
     assign dmem_write_data = rs2_data;
-    assign dmem_write_en   = 0;  // will be driven by control unit later
-    assign dmem_read_en    = 0;  // will be driven by control unit later
+    assign dmem_write_en   = mem_write;
+    assign dmem_read_en    = mem_read;
 
 endmodule

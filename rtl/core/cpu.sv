@@ -62,8 +62,6 @@ module cpu (
     .alu_src_b      (alu_src_b),
     .reg_write      (reg_write),
     .mem_to_reg     (mem_to_reg),
-    .branch         (branch),
-    .jump           (jump),
     .pc_src         (pc_src),
     .imem_addr          (imem_addr),
     .imem_data          (imem_data),
@@ -76,7 +74,9 @@ module cpu (
     .alu_zero       (alu_zero),
     .fetch_en       (fetch_en),
     .pc_write_en    (pc_write_en),
-    .alu_reg_en     (alu_reg_en)
+    .alu_reg_en     (alu_reg_en),
+    .mem_read  (mem_read),
+    .mem_write (mem_write)
     );
 
 endmodule

@@ -44,6 +44,18 @@ module soc_top (
     // Interrupt signals
     logic        timer_interrupt;
 
+    // Power-on reset signals
+    logic [3:0] por_counter = 4'h0;
+    logic       por_reset_n;
+
+    // Power-on reset — holds reset low for 16 cycles after programming
+    always_ff @(posedge clk_100mhz) begin
+        if (por_counter < 4'hF)
+            por_counter <= por_counter + 1;
+    end
+
+    assign por_reset_n = (por_counter == 4'hF);
+
     // Select which peripheral based on address
     assign uart_sel  = (dmem_addr[31:28] == 4'h4) && (dmem_addr[15:12] == 4'h0);
     assign timer_sel = (dmem_addr[31:28] == 4'h4) && (dmem_addr[15:12] == 4'h1);
@@ -57,7 +69,7 @@ module soc_top (
 
     cpu u_cpu (
     .clk              (clk_100mhz),
-    .rst_n            (rst_n),
+    .rst_n            (por_reset_n),
     .imem_addr        (imem_addr),
     .imem_data        (imem_data),
     .dmem_addr        (dmem_addr),
@@ -90,7 +102,7 @@ module soc_top (
 
     gpio u_gpio (
         .clk (clk_100mhz),
-        .rst_n (rst_n),
+        .rst_n (por_reset_n),
 
         .reg_write_en (mmio_write_en && gpio_sel),
         .reg_read_en (mmio_read_en && gpio_sel),
@@ -104,7 +116,7 @@ module soc_top (
 
     timer u_timer (
         .clk (clk_100mhz),
-        .rst_n (rst_n),
+        .rst_n (por_reset_n),
 
         .reg_write_en (mmio_write_en && timer_sel),
         .reg_read_en (mmio_read_en && timer_sel),
@@ -117,7 +129,7 @@ module soc_top (
 
     uart u_uart (
         .clk (clk_100mhz),
-        .rst_n (rst_n),
+        .rst_n (por_reset_n),
 
         .reg_write_en (mmio_write_en && uart_sel),
         .reg_read_en (mmio_read_en && uart_sel),

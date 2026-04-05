@@ -44,8 +44,8 @@ module control_unit (
     // --------------------------------------------------------
     // FSM state register
     // --------------------------------------------------------
-    logic [2:0] current_state;
-    logic [2:0] next_state;
+    (* keep = "true" *) logic [2:0] current_state;
+    (* keep = "true" *) logic [2:0] next_state;
 
     always_ff @(posedge clk) begin
         if (rst_n == 0)
