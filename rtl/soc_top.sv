@@ -69,7 +69,7 @@ module soc_top (
 
     imem #(
     .MEM_DEPTH (4096),
-    .MEM_FILE  ("sw/tests/test_imem.mem")
+    .MEM_FILE  ("../../../../sw/tests/program.mem")
     ) u_imem (
         .clk  (clk_100mhz),
         .addr (imem_addr),

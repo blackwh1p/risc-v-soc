@@ -9,7 +9,7 @@
 // ============================================================
 module imem #(
     parameter int MEM_DEPTH = 4096,
-    parameter     MEM_FILE  = "imem.mem"
+    parameter     MEM_FILE  = "../../../../sw/tests/program.mem"
 )(
     input  logic        clk,
 
