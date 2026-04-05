@@ -32,7 +32,16 @@ module alu (
     // Without this, Vivado builds the 32x32 multiply from ~283 CARRY4 LUT chains
     // (~98 ns) which violates the 10 ns clock. DSP48E1 completes it in ~4-5 ns.
     (* use_dsp = "yes" *) logic [63:0] mul_result;
+    (* use_dsp = "yes" *) logic [31:0] div_result;
+    (* use_dsp = "yes" *) logic [31:0] divu_result;
+    (* use_dsp = "yes" *) logic [31:0] rem_result;
+    (* use_dsp = "yes" *) logic [31:0] remu_result;
+
     assign mul_result = $signed(operand_a) * $signed(operand_b);
+    assign div_result  = $signed(operand_a) / $signed(operand_b);
+    assign rem_result  = $signed(operand_a) % $signed(operand_b);
+    assign divu_result = operand_a / operand_b;
+    assign remu_result = operand_a % operand_b;
 
     always_comb begin
         case (operation)
@@ -48,10 +57,10 @@ module alu (
             ALU_SLTU:   result = {31'b0, (operand_a < operand_b)};
             ALU_MUL:    result = mul_result[31:0];
             ALU_MULH:   result = mul_result[63:32];
-            ALU_DIV:    result = $signed(operand_a) / $signed(operand_b);
-            ALU_DIVU:   result = operand_a / operand_b;
-            ALU_REM:    result = $signed(operand_a) % $signed(operand_b);
-            ALU_REMU:   result = operand_a % operand_b;
+            ALU_DIV:    result = div_result;
+            ALU_DIVU:   result = divu_result;
+            ALU_REM:    result = rem_result;
+            ALU_REMU:   result = remu_result;
             default:    result = 32'b0;
         endcase
     end

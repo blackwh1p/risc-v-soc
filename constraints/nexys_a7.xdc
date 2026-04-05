@@ -67,9 +67,9 @@ set_property IOSTANDARD LVCMOS33 [get_ports {buttons[*]}]
 
 # Allow M-extension paths 2 clock cycles (20 ns) instead of 1 (10 ns)
 set_multicycle_path 10 -setup \
-    -from [get_cells -hierarchical -filter {NAME =~ *current_state_reg*}] \
-    -to   [get_cells -hierarchical -filter {NAME =~ *alu_result_reg*}]
+    -from [get_cells -hierarchical -filter {NAME =~ *instr_reg_reg*}] \
+    -to   [get_cells -hierarchical -filter {NAME =~ *alu_result_reg_reg*}]
 
 set_multicycle_path 9 -hold \
-    -from [get_cells -hierarchical -filter {NAME =~ *current_state_reg*}] \
-    -to   [get_cells -hierarchical -filter {NAME =~ *alu_result_reg*}]
+    -from [get_cells -hierarchical -filter {NAME =~ *instr_reg_reg*}] \
+    -to   [get_cells -hierarchical -filter {NAME =~ *alu_result_reg_reg*}]
