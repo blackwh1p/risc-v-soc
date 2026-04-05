@@ -116,3 +116,21 @@ sim_gpio:
 		rtl/peripheral/gpio.sv \
 		tb/peripheral/tb_gpio.sv
 	vvp sim_gpio.vvp
+
+# --- Software Compilation ---
+compile_sw:
+	riscv64-unknown-elf-gcc $(CFLAGS) \
+		-T sw/linker/linker.ld \
+		-o sw/tests/program.elf \
+		sw/startup/crt0.S \
+		sw/drivers/uart.c \
+		sw/drivers/gpio.c \
+		sw/drivers/timer.c \
+		sw/tests/main.c
+	riscv64-unknown-elf-objcopy -O binary \
+		sw/tests/program.elf \
+		sw/tests/program.bin
+	python3 scripts/bin_to_mem.py \
+		sw/tests/program.bin \
+		sw/tests/program.mem
+	@echo "Software compiled successfully"
