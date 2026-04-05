@@ -17,4 +17,12 @@ package alu_ops;
     parameter logic [3:0] ALU_SLT   = 4'b1000;  // Set Less Than Signed
     parameter logic [3:0] ALU_SLTU  = 4'b1001;  // Set Less Than Unsigned
 
+    // RV32M Extension
+    parameter logic [3:0] ALU_MUL   = 4'b1010;  // Multiply (lower 32 bits)
+    parameter logic [3:0] ALU_MULH  = 4'b1011;  // Multiply high signed
+    parameter logic [3:0] ALU_DIV   = 4'b1100;  // Divide signed    
+    parameter logic [3:0] ALU_DIVU  = 4'b1101;  // Divide unsigned
+    parameter logic [3:0] ALU_REM   = 4'b1110;  // Remainder signed
+    parameter logic [3:0] ALU_REMU  = 4'b1111;  // Remainder unsigned
+
 endpackage

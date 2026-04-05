@@ -28,6 +28,9 @@ module alu (
     logic [4:0] shamt;
     assign shamt = operand_b[4:0];
 
+    logic [63:0] mul_result;
+    assign mul_result = $signed(operand_a) * $signed(operand_b);
+
     always_comb begin
         case (operation)
             ALU_ADD:    result = operand_a + operand_b;
@@ -40,6 +43,12 @@ module alu (
             ALU_SRA:    result = $signed(operand_a) >>> shamt;
             ALU_SLT:    result = {31'b0, ($signed(operand_a) < $signed(operand_b))};
             ALU_SLTU:   result = {31'b0, (operand_a < operand_b)};
+            ALU_MUL:    result = mul_result[31:0];
+            ALU_MULH:   result = mul_result[63:32];
+            ALU_DIV:    result = $signed(operand_a) / $signed(operand_b);
+            ALU_DIVU:   result = operand_a / operand_b;
+            ALU_REM:    result = $signed(operand_a) % $signed(operand_b);
+            ALU_REMU:   result = operand_a % operand_b;
             default:    result = 32'b0;
         endcase
     end

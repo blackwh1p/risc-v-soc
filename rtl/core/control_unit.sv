@@ -109,26 +109,40 @@ module control_unit (
                 alu_reg_en = 1;
                 case (opcode)
                     OP_R: begin
-                        case (funct3)
-                            F3_ADD_SUB: begin
-                                if (funct7 == F7_ALT)
-                                        alu_operation = ALU_SUB;
-                                else
-                                        alu_operation = ALU_ADD;
-                            end
-                            F3_AND:     alu_operation = ALU_AND;
-                            F3_OR:      alu_operation = ALU_OR;
-                            F3_XOR:     alu_operation = ALU_XOR;
-                            F3_SLL:     alu_operation = ALU_SLL;
-                            F3_SR: begin
-                                if (funct7 == F7_ALT)
-                                        alu_operation = ALU_SRA;
-                                else
-                                        alu_operation = ALU_SRL;
-                            end
-                            F3_SLT:     alu_operation = ALU_SLT;
-                            F3_SLTU:    alu_operation = ALU_SLTU;
-                        endcase
+                        if (funct7 == F7_MEXT) begin
+                            // RV32M multiply/divide
+                            case (funct3)
+                                3'b000:     alu_operation = ALU_MUL;
+                                3'b001:     alu_operation = ALU_MULH;
+                                3'b100:     alu_operation = ALU_DIV;
+                                3'b101:     alu_operation = ALU_DIVU;
+                                3'b110:     alu_operation = ALU_REM;
+                                3'b111:     alu_operation = ALU_REMU;
+                                default:    alu_operation = ALU_ADD;
+                            endcase
+                        end else begin
+                            // RV32I operations
+                            case (funct3)
+                                F3_ADD_SUB: begin
+                                    if (funct7 == F7_ALT)
+                                            alu_operation = ALU_SUB;
+                                    else
+                                            alu_operation = ALU_ADD;
+                                end
+                                F3_AND:     alu_operation = ALU_AND;
+                                F3_OR:      alu_operation = ALU_OR;
+                                F3_XOR:     alu_operation = ALU_XOR;
+                                F3_SLL:     alu_operation = ALU_SLL;
+                                F3_SR: begin
+                                    if (funct7 == F7_ALT)
+                                            alu_operation = ALU_SRA;
+                                    else
+                                            alu_operation = ALU_SRL;
+                                end
+                                F3_SLT:     alu_operation = ALU_SLT;
+                                F3_SLTU:    alu_operation = ALU_SLTU;
+                            endcase
+                        end
                     end
 
                     OP_B: begin
