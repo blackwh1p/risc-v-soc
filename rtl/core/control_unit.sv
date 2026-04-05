@@ -64,6 +64,12 @@ module control_unit (
             STATE_DECODE:   next_state = STATE_EXECUTE;
             STATE_EXECUTE:  begin
                 case (opcode)
+                    OP_R: begin
+                        if (funct7 == F7_MEXT)
+                            next_state = STATE_MUL_WAIT;
+                        else
+                            next_state = STATE_WRITEBACK;
+                    end
                     OP_I_LOAD:          next_state = STATE_MEMORY;
                     OP_S:               next_state = STATE_MEMORY;
                     OP_B:               next_state = STATE_FETCH;
@@ -72,6 +78,7 @@ module control_unit (
                 endcase
             end
 
+            STATE_MUL_WAIT: next_state = STATE_WRITEBACK;
             STATE_MEMORY: begin
                 case (opcode)
                     OP_I_LOAD: next_state = STATE_WRITEBACK;
@@ -106,7 +113,7 @@ module control_unit (
             STATE_FETCH:    fetch_en = 0;
             STATE_DECODE:   fetch_en = 1;
             STATE_EXECUTE: begin
-                alu_reg_en = 1;
+                alu_reg_en = (opcode == OP_R && funct7 == F7_MEXT) ? 0 : 1;
                 case (opcode)
                     OP_R: begin
                         if (funct7 == F7_MEXT) begin
@@ -178,6 +185,23 @@ module control_unit (
                             default:    alu_operation = ALU_ADD;
                         endcase
                     end
+                endcase
+            end
+
+            // M-extension settle state: the ALU output has now had 2 full clock
+            // periods to propagate. Capture it into alu_result_reg now.
+            // The control unit must hold the same alu_operation here — because
+            // opcode/funct3/funct7 are still in instr_reg, they are stable.
+            STATE_MUL_WAIT: begin
+                alu_reg_en = 1;
+                case (funct3)
+                    3'b000:     alu_operation = ALU_MUL;
+                    3'b001:     alu_operation = ALU_MULH;
+                    3'b100:     alu_operation = ALU_DIV;
+                    3'b101:     alu_operation = ALU_DIVU;
+                    3'b110:     alu_operation = ALU_REM;
+                    3'b111:     alu_operation = ALU_REMU;
+                    default:    alu_operation = ALU_ADD;
                 endcase
             end
 

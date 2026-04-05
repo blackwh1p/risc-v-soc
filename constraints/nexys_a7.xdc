@@ -64,3 +64,8 @@ set_property PACKAGE_PIN M17 [get_ports {buttons[2]}]
 set_property PACKAGE_PIN P18 [get_ports {buttons[3]}]
 set_property PACKAGE_PIN N15 [get_ports {buttons[4]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {buttons[*]}]
+
+# Allow M-extension paths 2 clock cycles (20 ns) instead of 1 (10 ns)
+set_multicycle_path 2 -setup \
+    -from [get_cells -hierarchical -filter {NAME =~ *instr_reg*}] \
+    -to   [get_cells -hierarchical -filter {NAME =~ *alu_result_reg*}]

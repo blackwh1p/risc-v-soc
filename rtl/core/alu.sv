@@ -28,7 +28,10 @@ module alu (
     logic [4:0] shamt;
     assign shamt = operand_b[4:0];
 
-    logic [63:0] mul_result;
+    // Force Vivado to use DSP48E1 hardware multiplier blocks (Artix-7 has 240).
+    // Without this, Vivado builds the 32x32 multiply from ~283 CARRY4 LUT chains
+    // (~98 ns) which violates the 10 ns clock. DSP48E1 completes it in ~4-5 ns.
+    (* use_dsp = "yes" *) logic [63:0] mul_result;
     assign mul_result = $signed(operand_a) * $signed(operand_b);
 
     always_comb begin

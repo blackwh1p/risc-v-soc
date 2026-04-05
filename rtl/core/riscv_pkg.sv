@@ -71,4 +71,10 @@ package riscv_pkg;
     parameter logic [2:0] STATE_MEMORY    = 3'b011;
     parameter logic [2:0] STATE_WRITEBACK = 3'b100;
 
+    // Extra state for M-extension ops (MUL/DIV/REM).
+    // DIV and REM are purely combinational in LUTs (~60-100 ns) and cannot use
+    // DSP blocks. This state gives the result one extra clock to settle before
+    // alu_reg_en captures it, then a multicycle-path XDC constraint covers it.
+    parameter logic [2:0] STATE_MUL_WAIT  = 3'b101;
+
 endpackage
