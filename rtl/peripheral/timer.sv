@@ -21,6 +21,7 @@ module timer (
     logic [31:0]    counter_reg;    // current counter value
     logic [31:0]    compare_reg;    // compare value
     logic [1:0]     control_reg;    // bit0=enable, bit1=int_enable
+    logic           irq_flag;       // sticky interrupt pending; cleared by SW write to 0x0C
 
     // 1 — Synchronous register write logic
     always_ff @(posedge clk) begin
@@ -28,6 +29,7 @@ module timer (
             counter_reg <= 32'b0;
             compare_reg <= 32'b0;
             control_reg <= 2'b0;
+            irq_flag    <= 1'b0;
         end
         else begin
             // CPU writes to registers
@@ -36,20 +38,24 @@ module timer (
                     4'h0: counter_reg <= reg_write_data;
                     4'h4: compare_reg <= reg_write_data;
                     4'h8: control_reg <= reg_write_data[1:0];
+                    4'hC: irq_flag   <= 1'b0;  // write any value to clear IRQ
                 endcase
             end
             else if (control_reg[0]) begin
                 // Timer enabled — increment counter
-                if (counter_reg == compare_reg)
+                if (counter_reg == compare_reg) begin
                     counter_reg <= 32'b0;
+                    if (control_reg[1])
+                        irq_flag <= 1'b1;  // latch interrupt pending on compare match
+                end
                 else
                     counter_reg <= counter_reg + 1;
             end
         end
     end
 
-    // 2 — Interrupt output logic
-    assign timer_interrupt = control_reg[1] && (counter_reg == compare_reg);
+    // 2 — Interrupt output: level signal from sticky flag (not one-cycle pulse)
+    assign timer_interrupt = irq_flag;
 
     // 3 — MMIO read logic
     always @(*) begin
@@ -59,6 +65,7 @@ module timer (
                 4'h0: reg_read_data = counter_reg;
                 4'h4: reg_read_data = compare_reg;
                 4'h8: reg_read_data = {30'b0, control_reg};
+                4'hC: reg_read_data = {31'b0, irq_flag};
                 default: reg_read_data = 32'b0;
             endcase
         end

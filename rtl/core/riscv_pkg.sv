@@ -18,7 +18,8 @@ package riscv_pkg;
     parameter logic [6:0] OP_JALR    = 7'b1100111; // I-type: JALR
     parameter logic [6:0] OP_LUI     = 7'b0110111; // U-type: LUI
     parameter logic [6:0] OP_AUIPC   = 7'b0010111; // U-type: AUIPC
-    parameter logic [6:0] OP_SYSTEM  = 7'b1110011; // I-type: ECALL, EBREAK
+    parameter logic [6:0] OP_SYSTEM  = 7'b1110011; // I-type: ECALL, EBREAK, CSR
+    parameter logic [6:0] OP_FENCE   = 7'b0001111; // FENCE / FENCE.I — NOP for in-order CPU
 
     // --------------------------------------------------------
     // funct3 values — bits [14:12]
@@ -47,6 +48,8 @@ package riscv_pkg;
     parameter logic [2:0] F3_LW      = 3'b010; // Load Word (32-bit)
     parameter logic [2:0] F3_LH      = 3'b001; // Load Halfword (16-bit)
     parameter logic [2:0] F3_LB      = 3'b000; // Load Byte (8-bit)
+    parameter logic [2:0] F3_LHU     = 3'b101; // Load Halfword Unsigned (16-bit)
+    parameter logic [2:0] F3_LBU     = 3'b100; // Load Byte Unsigned (8-bit)
 
     // funct3 for store instructions
     parameter logic [2:0] F3_SW      = 3'b010; // Store Word (32-bit)
@@ -70,11 +73,34 @@ package riscv_pkg;
     parameter logic [2:0] STATE_EXECUTE   = 3'b010;
     parameter logic [2:0] STATE_MEMORY    = 3'b011;
     parameter logic [2:0] STATE_WRITEBACK = 3'b100;
+    parameter logic [2:0] STATE_MDU       = 3'b101;  // multi-cycle mul/div wait
+    parameter logic [2:0] STATE_TRAP      = 3'b110;  // trap entry: save PC/cause, jump to MTVEC
+    parameter logic [2:0] STATE_MEMORY2   = 3'b111;  // second DMEM access for cross-boundary misaligned
 
-    // Extra state for M-extension ops (MUL/DIV/REM).
-    // DIV and REM are purely combinational in LUTs (~60-100 ns) and cannot use
-    // DSP blocks. This state gives the result one extra clock to settle before
-    // alu_reg_en captures it, then a multicycle-path XDC constraint covers it.
-    parameter logic [2:0] STATE_MUL_WAIT  = 3'b101;
+    // --------------------------------------------------------
+    // MCAUSE exception / interrupt codes
+    // --------------------------------------------------------
+    parameter logic [31:0] EXC_FETCH_MISALIGN  = 32'h00000000; // instruction address misaligned
+    parameter logic [31:0] EXC_ILLEGAL_INSTR  = 32'h00000002; // illegal instruction
+    parameter logic [31:0] EXC_EBREAK         = 32'h00000003; // breakpoint
+    parameter logic [31:0] EXC_LOAD_MISALIGN  = 32'h00000004; // load address misaligned
+    parameter logic [31:0] EXC_STORE_MISALIGN = 32'h00000006; // store address misaligned
+    parameter logic [31:0] EXC_ECALL_M        = 32'h0000000B; // ECALL from M-mode
+    parameter logic [31:0] EXC_M_TIMER_IRQ    = 32'h80000007; // machine timer interrupt
+
+    // --------------------------------------------------------
+    // CSR addresses (machine-level)
+    // --------------------------------------------------------
+    parameter logic [11:0] CSR_MSTATUS   = 12'h300;
+    parameter logic [11:0] CSR_MIE       = 12'h304;
+    parameter logic [11:0] CSR_MTVEC     = 12'h305;
+    parameter logic [11:0] CSR_MSCRATCH  = 12'h340;
+    parameter logic [11:0] CSR_MEPC      = 12'h341;
+    parameter logic [11:0] CSR_MCAUSE    = 12'h342;
+    parameter logic [11:0] CSR_MTVAL     = 12'h343;
+    parameter logic [11:0] CSR_MIP       = 12'h344;
+    parameter logic [11:0] CSR_MHARTID   = 12'hF14;
+    parameter logic [11:0] CSR_CYCLE     = 12'hC00;  // read-only: cycle counter
+    parameter logic [11:0] CSR_INSTRET   = 12'hC02;  // read-only: retired instruction counter
 
 endpackage

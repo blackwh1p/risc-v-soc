@@ -9,6 +9,8 @@
 *.mif
 *.xpr
 *.bit
+*.mcs
+*.prm
 *.ltx
 *.runs/
 *.cache/
@@ -35,6 +37,11 @@ webtalk*.log
 *.map
 *.o
 *.a
+
+# --- Generated firmware images (regenerate with make compile_*) ---
+# test_imem.mem is a static committed test fixture — keep it tracked.
+sw/tests/*.mem
+!sw/tests/test_imem.mem
 
 # --- Python cache ---
 __pycache__/

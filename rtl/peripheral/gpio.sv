@@ -15,13 +15,32 @@ module gpio (
     input  logic [31:0] reg_write_data,
     output logic [31:0] reg_read_data,
 
-    // Physical GPIO pins (go to Nexys A7 LEDs and buttons)
+    // Physical GPIO pins
     output logic [15:0] gpio_out,       // connected to 16 LEDs
-    input  logic [15:0] gpio_in         // connected to buttons/switches
+    input  logic [15:0] gpio_in,        // connected to 16 switches
+    input  logic [4:0]  gpio_buttons    // [0]=BTNU [1]=BTNL [2]=BTNR [3]=BTND [4]=BTNC
 );
 
-    logic [15:0] direction_reg;     // 1=output, 0=input per bit
-    logic [15:0] output_reg;        // holds values to drive on LEDs
+    logic [15:0] direction_reg;
+    logic [15:0] output_reg;
+
+    // 2-FF synchronizers for asynchronous external inputs
+    logic [15:0] gpio_in_sync_0,      gpio_in_sync;
+    logic [4:0]  gpio_buttons_sync_0, gpio_buttons_sync;
+
+    always_ff @(posedge clk) begin
+        if (!rst_n) begin
+            gpio_in_sync_0      <= 16'b0;
+            gpio_in_sync        <= 16'b0;
+            gpio_buttons_sync_0 <= 5'b0;
+            gpio_buttons_sync   <= 5'b0;
+        end else begin
+            gpio_in_sync_0      <= gpio_in;
+            gpio_in_sync        <= gpio_in_sync_0;
+            gpio_buttons_sync_0 <= gpio_buttons;
+            gpio_buttons_sync   <= gpio_buttons_sync_0;
+        end
+    end
 
     // 1 — Synchronous register write logic
     always_ff @(posedge clk) begin
@@ -47,13 +66,13 @@ module gpio (
             case (reg_addr)
                 4'h0: reg_read_data = {16'b0, direction_reg};
                 4'h4: reg_read_data = {16'b0, output_reg}; 
-                4'h8: reg_read_data = {16'b0, gpio_in};
+                4'h8: reg_read_data = {11'b0, gpio_buttons_sync, gpio_in_sync};
                 default: reg_read_data = 32'b0;
             endcase
         end
     end
 
-    // 3 — Pin connections
-    assign gpio_out = output_reg;
+    // 3 — Pin connections (bits not configured as outputs are suppressed)
+    assign gpio_out = output_reg & direction_reg;
     
 endmodule
