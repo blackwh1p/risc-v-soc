@@ -23,21 +23,20 @@ int main(void)
     while (1)
     {
         // --- Step 4a: Wait ~500ms using timer ---
-        timer_set(50000000);
-        while (timer_read() < 50000000) {
-            // busy wait
-        }
+        // Reset counter to 0, then enable with compare=max so the hardware
+        // never resets the counter during our wait. Poll until count reaches
+        // target — safe because the counter only increases monotonically.
+        timer_clear();
+        timer_set(0xFFFFFFFF);
+        while (timer_read() < 50000000) {}
 
         // --- Step 4b: Toggle LEDs ---
         static unsigned int led_state = 0xFFFF;
-        led_state = (~led_state) & 0xFFFF; // toggle state
-        gpio_write(led_state); // write new state to GPIO
+        led_state = (~led_state) & 0xFFFF;
+        gpio_write(led_state);
 
         // --- Step 4c: Send tick message ---
         uart_puts("Tick!\n");
-
-        // --- Step 4d: Clear timer ---
-        timer_clear();
     }
     return 0;
 }

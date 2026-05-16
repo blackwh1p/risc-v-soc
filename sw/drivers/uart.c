@@ -19,12 +19,15 @@ void uart_puts(const char* str) {
 }
 
 char uart_getc(void) {
-    // Wait until there is data to read (not implemented in this simple example)
-    // In a real implementation, you would check the status register for data availability
-    while (!(*(volatile unsigned int*)UART_STATUS & (1 << 1)))
+    // Wait until RX byte is available.
+    while (!(*(volatile unsigned int*)UART_STATUS & UART_RX_VALID))
     {
         // Busy wait
     }
 
     return (char)(*(volatile unsigned int*)UART_RX_DATA);
+}
+
+int uart_overrun(void) {
+    return !!(*(volatile unsigned int*)UART_STATUS & UART_RX_OVERRUN);
 }

@@ -21,18 +21,22 @@ _start:
     # --------------------------------------------------------
     la   t0, _bss_start     # load address of bss start into t0
     la   t1, _bss_end       # load address of bss end into t1
+    bge  t0, t1, bss_done
 
     loop_word:
         sw zero, 0(t0)
         addi t0, t0, 4
         blt t0, t1, loop_word
 
+    bss_done:
+
     # --------------------------------------------------------
-    # Step 3 — Copy .data section from IMEM to DMEM
+    # Step 3 — Copy initialized data (.data/.sdata) from IMEM to DMEM
     # --------------------------------------------------------
     la   t0, _data_src      # source in IMEM
     la   t1, _data_start    # destination in DMEM
     la   t2, _data_end      # end of destination
+    bge  t1, t2, data_done
 
     loop_copy:
         lw t3, 0(t0)
@@ -40,6 +44,8 @@ _start:
         addi t0, t0, 4
         addi t1, t1, 4
         blt t1, t2, loop_copy
+
+    data_done:
 
     # --------------------------------------------------------
     # Step 4 — Call main()

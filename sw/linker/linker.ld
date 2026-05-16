@@ -3,8 +3,8 @@ ENTRY(_start)
 /* Memory regions */
 MEMORY
 {
-    IMEM (rx)  : ORIGIN = 0x00000000, LENGTH = 16K
-    DMEM (rwx) : ORIGIN = 0x20000000, LENGTH = 16K
+    IMEM (rx)  : ORIGIN = 0x00000000, LENGTH = 32K
+    DMEM (rwx) : ORIGIN = 0x20000000, LENGTH = 32K
 }
 
 SECTIONS
@@ -14,10 +14,18 @@ SECTIONS
         *(.text*)          /* all other code */
     } > IMEM
 
+    .rodata : {
+        *(.rodata*)        /* string literals, const tables */
+        *(.srodata*)
+        . = ALIGN(4);
+    } > IMEM
+
     .data : {
-        _data_start = .;   /* start of data in DMEM */
+        _data_start = .;   /* start of initialized data in DMEM */
         *(.data*)
-        _data_end = .;     /* end of data in DMEM */
+        *(.sdata*)
+        . = ALIGN(4);
+        _data_end = .;     /* end of initialized data in DMEM */
     } > DMEM AT > IMEM     /* VMA=DMEM, LMA=IMEM */
 
     _data_src = LOADADDR(.data);
@@ -25,7 +33,9 @@ SECTIONS
     .bss : {
         _bss_start = .;
         *(.bss*)
+        *(.sbss*)
         *(COMMON)
+        . = ALIGN(4);
         _bss_end = .;
     } > DMEM
 
