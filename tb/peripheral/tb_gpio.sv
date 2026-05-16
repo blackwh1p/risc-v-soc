@@ -17,6 +17,7 @@ module tb_gpio;
     logic [31:0] reg_read_data;
     logic [15:0] gpio_out;
     logic [15:0] gpio_in;
+    logic [4:0]  gpio_buttons;
 
     // --- Instantiate gpio ---
     gpio dut (
@@ -30,7 +31,8 @@ module tb_gpio;
         .reg_read_data (reg_read_data),
 
         .gpio_out (gpio_out),
-        .gpio_in (gpio_in)
+        .gpio_in (gpio_in),
+        .gpio_buttons (gpio_buttons)
     );
 
     // --- Clock generator ---
@@ -46,6 +48,8 @@ module tb_gpio;
         reg_read_en   = 0;
         reg_addr      = 4'h0;
         reg_write_data = 32'b0;
+        gpio_in       = 16'b0;
+        gpio_buttons  = 5'b0;
 
         // --- Apply reset ---
         @(posedge clk);
@@ -58,8 +62,12 @@ module tb_gpio;
         @(posedge clk);
         #1;
 
-        // --- Test 1: Write to OUTPUT register, verify gpio_out ---
+        // --- Test 1: Set direction=all-outputs, write OUTPUT, verify gpio_out ---
         reg_write_en = 1;
+        reg_addr = 4'h0;
+        reg_write_data = 32'h0000FFFF;  // all outputs
+        @(posedge clk); #1;
+
         reg_addr = 4'h4;
         reg_write_data = 32'h0000FF00;
         @(posedge clk);
@@ -73,7 +81,11 @@ module tb_gpio;
 
 
         // --- Test 2: Read from INPUT register ---
-        gpio_in = 16'hABCD;
+        // Set external inputs then wait 2 posedges for 2-FF synchronizer to settle.
+        gpio_in      = 16'hABCD;
+        gpio_buttons = 5'h1A;  // [4]=BTNC=1, [3:0]=BTND/BTNR/BTNL/BTNU=0xA
+        @(posedge clk); @(posedge clk); #1;
+
         reg_read_en = 1;
         reg_addr = 4'h8;
         #1;
@@ -82,6 +94,11 @@ module tb_gpio;
             $display("PASS: gpio_in read correctly = 0xABCD");
         else
             $display("FAIL: gpio_in expected 0xABCD, got %0h", reg_read_data[15:0]);
+
+        if (reg_read_data[20:16] == 5'h1A)
+            $display("PASS: gpio_buttons read correctly = 0x1A");
+        else
+            $display("FAIL: gpio_buttons expected 0x1A, got %0h", reg_read_data[20:16]);
         reg_read_en = 0;
 
 
@@ -102,6 +119,12 @@ module tb_gpio;
         else
             $display("FAIL: DIRECTION expected 0xAAAA, got %0h", reg_read_data[15:0]);
         reg_read_en = 0;
+
+        // direction=0xAAAA, output_reg=0xFF00 → gpio_out = 0xFF00 & 0xAAAA = 0xAA00
+        if (gpio_out == 16'hAA00)
+            $display("PASS: gpio_out gated by direction = 0xAA00");
+        else
+            $display("FAIL: gpio_out gated expected 0xAA00, got %0h", gpio_out);
 
 
         // --- Test 4: Reset behavior ---

@@ -11,15 +11,22 @@ module tb_imem;
 
     logic [31:0] addr;
     logic [31:0] data;
+    logic [31:0] data_addr;
+    logic [31:0] data_read_data;
 
     // --- Instantiate imem ---
     imem #(
-    .MEM_DEPTH (4096),
-    .MEM_FILE  ("sw/tests/test_imem.mem")
+        .MEM_DEPTH (4),
+        .MEM_FILE  ("sw/tests/test_imem.mem")
     ) dut (
-        .clk  (clk),
-        .addr (addr),
-        .data (data)
+        .clk            (clk),
+        .addr           (addr),
+        .data           (data),
+        .data_addr      (data_addr),
+        .data_read_data (data_read_data),
+        .write_en       (1'b0),
+        .write_addr     (13'b0),
+        .write_data     (32'b0)
     );
 
     // --- Clock generator ---
@@ -29,6 +36,7 @@ module tb_imem;
     // --- Test cases ---
         initial begin
             addr = 32'b0;
+            data_addr = 32'b0;
             @(posedge clk);
             #1;
 

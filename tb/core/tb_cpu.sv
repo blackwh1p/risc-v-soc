@@ -21,6 +21,7 @@ module tb_cpu;
     // --- Data memory interface ---
     logic [31:0] dmem_addr;
     logic [31:0] dmem_write_data;
+    logic [3:0]  dmem_byte_enable;
     logic        dmem_write_en;
     logic        dmem_read_en;
     logic [31:0] dmem_read_data;
@@ -35,10 +36,12 @@ module tb_cpu;
     cpu dut (
     .clk              (clk),
     .rst_n            (rst_n),
+    .irq_m_timer      (1'b0),
     .imem_addr        (imem_addr),
     .imem_data        (imem_data),
     .dmem_addr        (dmem_addr),
     .dmem_write_data  (dmem_write_data),
+    .dmem_byte_enable (dmem_byte_enable),
     .dmem_write_en    (dmem_write_en),
     .dmem_read_en     (dmem_read_en),
     .dmem_read_data   (dmem_read_data)
@@ -48,20 +51,19 @@ module tb_cpu;
     initial clk = 0;
     always #5 clk = ~clk;
 
-    // --- Instruction memory model ---
-    // Combinational read — returns instruction at word address
-    assign imem_data = imem[imem_addr[31:2]];
+    // --- Instruction memory model (synchronous, matches real imem.sv) ---
+    always_ff @(posedge clk)
+        imem_data <= imem[imem_addr[31:2]];
 
-    // --- Data memory model ---
-    // YOU WRITE THIS:
-    // Combinational read: dmem_read_data = dmem[dmem_addr[31:2]]
-    // Synchronous write: on posedge clk, if dmem_write_en, write dmem_write_data
-
-    assign dmem_read_data = dmem[dmem_addr[31:2]];
-
-    always @(posedge clk) begin
-        if (dmem_write_en)
-            dmem[dmem_addr[31:2]] <= dmem_write_data;
+    // --- Data memory model (synchronous, matches real dmem.sv) ---
+    always_ff @(posedge clk) begin
+        dmem_read_data <= dmem[dmem_addr[31:2]];
+        if (dmem_write_en) begin
+            if (dmem_byte_enable[0]) dmem[dmem_addr[31:2]][7:0]   <= dmem_write_data[7:0];
+            if (dmem_byte_enable[1]) dmem[dmem_addr[31:2]][15:8]  <= dmem_write_data[15:8];
+            if (dmem_byte_enable[2]) dmem[dmem_addr[31:2]][23:16] <= dmem_write_data[23:16];
+            if (dmem_byte_enable[3]) dmem[dmem_addr[31:2]][31:24] <= dmem_write_data[31:24];
+        end
     end
 
     // --- Test program ---

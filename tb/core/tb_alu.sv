@@ -10,7 +10,7 @@ module tb_alu;
 
     // Step 1 — Declare signals that connect to the ALU ports
     // (these are just wires in the testbench)
-    logic [3:0]  operation;
+    logic [4:0]  operation;
     logic [31:0] operand_a;
     logic [31:0] operand_b;
     logic [31:0] result;
@@ -127,65 +127,8 @@ module tb_alu;
         else
             $display("FAIL: SLTU expected 0, got %0d", result);
 
-        // Test MUL: 5 * 3 = 15
-        operation = ALU_MUL;
-        operand_a = 32'd5;
-        operand_b = 32'd3;
-        #10;
-        if (result == 32'd15)
-            $display("PASS: MUL 5 * 3 = 15");
-        else
-            $display("FAIL: MUL expected 15, got %0d", result);
-
-        // Test MULH: large * large, check upper 32 bits
-        operation = ALU_MULH;
-        operand_a = 32'h80000000;  // -2147483648 signed
-        operand_b = 32'd2;
-        #10;
-        if (result == 32'hFFFFFFFF)
-            $display("PASS: MULH upper bits correct");
-        else
-            $display("FAIL: MULH expected 0xFFFFFFFF, got %0h", result);
-
-        // Test DIV: 15 / 3 = 5
-        operation = ALU_DIV;
-        operand_a = 32'd15;
-        operand_b = 32'd3;
-        #10;
-        if (result == 32'd5)
-            $display("PASS: DIV 15 / 3 = 5");
-        else
-            $display("FAIL: DIV expected 5, got %0d", result);
-
-        // Test REM: 17 % 5 = 2
-        operation = ALU_REM;
-        operand_a = 32'd17;
-        operand_b = 32'd5;
-        #10;
-        if (result == 32'd2)
-            $display("PASS: REM 17 %% 5 = 2");
-        else
-            $display("FAIL: REM expected 2, got %0d", result);
-
-        // Test DIVU: unsigned divide
-        operation = ALU_DIVU;
-        operand_a = 32'd20;
-        operand_b = 32'd4;
-        #10;
-        if (result == 32'd5)
-            $display("PASS: DIVU 20 / 4 = 5");
-        else
-            $display("FAIL: DIVU expected 5, got %0d", result);
-
-        // Test REMU: unsigned remainder
-        operation = ALU_REMU;
-        operand_a = 32'd17;
-        operand_b = 32'd5;
-        #10;
-        if (result == 32'd2)
-            $display("PASS: REMU 17 %% 5 = 2");
-        else
-            $display("FAIL: REMU expected 2, got %0d", result);
+        // RV32M (MUL/DIV/REM) lives in the multi-cycle MDU and
+        // is exercised by sim_mdu and the higher-level CPU tests.
 
         // Test zero flag: 5 - 5 = 0, zero should be 1
         operation = ALU_SUB;
