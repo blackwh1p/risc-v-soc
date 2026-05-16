@@ -1,92 +1,313 @@
 # Custom RISC-V SoC — RV32IM on Nexys A7
 
-A custom RISC-V System-on-Chip (SoC) implemented in SystemVerilog, targeting the
-Digilent Nexys A7 FPGA board. The processor implements the RV32IM ISA
-(base integer instruction set + multiply/divide extension) as a multi-cycle
-finite-state machine, with a minimal bare-metal software stack.
+A custom RISC-V System-on-Chip implemented in SystemVerilog and verified on the
+Digilent Nexys A7-100T (Artix-7). The CPU implements **RV32IM** — the full base
+integer ISA plus the multiply/divide extension — as a multi-cycle finite-state
+machine with machine-mode exception handling, CSR support, and a complete
+bare-metal software stack.
+
+---
+
+## Features
+
+- **RV32IM CPU** — all 47 base integer + multiply/divide instructions
+- **Machine-mode exception handling** — ECALL, EBREAK, illegal instruction, fetch-misalignment, timer interrupt (MRET supported)
+- **Hardware misaligned load/store** — cross-boundary accesses handled in silicon, no trap
+- **CSR support** — MSTATUS, MIE, MTVEC, MSCRATCH, MEPC, MCAUSE, MTVAL, MIP, MHARTID, CYCLE, INSTRET
+- **Five MMIO peripherals** — UART, timer, GPIO, 8-digit 7-segment display, SPI flash
+- **UART bootloader** — upload new programs over serial without re-synthesizing
+- **47 official RISC-V tests** passing (39 rv32ui + 8 rv32um)
+- **Full testbench suite** — 20+ simulation targets, SVA properties, integration tests
+
+---
+
+## Architecture
+
+### CPU Core
+
+The CPU is a **non-pipelined multi-cycle FSM** running at 100 MHz on the Nexys A7.
+
+```
+FETCH → DECODE → EXECUTE → [MEMORY] → [MEMORY2] → WRITEBACK → [TRAP]
+```
+
+`MEMORY2` handles cross-boundary misaligned loads and stores in hardware.
+`TRAP` saves PC and cause to CSRs and jumps to MTVEC on any exception or interrupt.
+
+**Cycles per instruction class:**
+
+| Instruction class | Cycles |
+|-------------------|--------|
+| Branch (taken or not) | 3 |
+| Store (aligned) | 4 |
+| ALU-R, ALU-I, LUI, AUIPC, JAL, JALR, CSR | 4 |
+| Load (aligned) | 5 |
+| Load/store (cross-boundary misaligned) | 6 / 5 |
+| MUL, MULH, MULHSU, MULHU | 7 |
+| DIV, DIVU, REM, REMU | 38 |
+
+**Benchmark result** (1000 iterations of add + mul + divu + branch):
+`206 124 cycles · 39 030 instructions · CPI = 5.2 · 18.9 MIPS @ 100 MHz`
+
+### SoC Structure
+
+```
+nexys_a7_top (FPGA top — 2-FF reset synchronizer)
+└── soc_top
+    ├── cpu
+    │   ├── control_unit   — multi-cycle FSM, exception/interrupt control
+    │   └── datapath       — PC, register file, ALU, MDU, CSR file, immediate gen
+    ├── imem  0x00000000   32 KB  instruction ROM (bootloader lives in top 1 KB)
+    ├── dmem  0x20000000   32 KB  data RAM / stack
+    ├── uart  0x40000000    4 KB  serial (115 200 baud default)
+    ├── timer 0x40001000    4 KB  32-bit compare timer + machine timer IRQ
+    ├── gpio  0x40002000    4 KB  16-bit LEDs and switches
+    ├── seg7  0x40003000    4 KB  8-digit 7-segment display
+    └── spi   0x40004000    4 KB  SPI flash controller (bootloader use)
+```
+
+---
+
+## Memory Map
+
+| Region | Base | Size | Description |
+|--------|------|------|-------------|
+| IMEM | `0x00000000` | 32 KB | Instruction ROM |
+| DMEM | `0x20000000` | 32 KB | Data RAM / stack |
+| UART | `0x40000000` | 4 KB | Serial UART |
+| Timer | `0x40001000` | 4 KB | Interval timer |
+| GPIO | `0x40002000` | 4 KB | 16-bit I/O |
+| 7-Segment | `0x40003000` | 4 KB | 8-digit hex display |
+| SPI flash | `0x40004000` | 4 KB | SPI flash controller |
+| IMEM write | `0x50000000` | 32 KB | Bootloader write window into IMEM |
+
+Full MMIO register-level detail is in [`docs/memory_map.md`](docs/memory_map.md).
+
+---
+
+## Toolchain Requirements
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| `iverilog` + `vvp` | ≥ 11 | RTL simulation |
+| `riscv64-unknown-elf-gcc` | ≥ 12 | Cross-compiler (`-march=rv32im_zicsr -mabi=ilp32`) |
+| `python3` | ≥ 3.8 | `scripts/bin_to_mem.py` — `.bin` → `.mem` conversion |
+| Xilinx Vivado | 2025.2 | FPGA synthesis, implementation, programming |
+
+Install the RISC-V toolchain on Ubuntu/Debian:
+```bash
+sudo apt install gcc-riscv64-unknown-elf
+```
+
+---
+
+## Simulation
+
+### Run all tests
+```bash
+make sim_all          # ~20 simulation targets — all must pass before committing
+```
+
+### Unit tests
+```bash
+make sim_alu          # ALU operations
+make sim_mdu          # MDU multiply/divide (all RV32M special cases)
+make sim_csr          # CSR file (traps, MRET, irq_pending)
+make sim_regfile      # Register file
+make sim_imem         # Instruction memory
+make sim_dmem         # Data memory
+make sim_uart         # UART TX/RX, overrun
+make sim_timer        # Timer counter, compare, interrupt
+make sim_gpio         # GPIO direction, read, write
+make sim_sevenseg     # 7-segment display multiplexer
+make sim_spi_flash    # SPI flash controller
+```
+
+### CPU tests
+```bash
+make sim_cpu              # Basic CPU integration
+make sim_cpu_regression   # Load/store/branch/jump regression
+make sim_cpu_csr          # ECALL + timer interrupt end-to-end
+make sim_cpu_exceptions   # Illegal instr, EBREAK, misalign, FENCE
+make sim_cpu_isa          # Compiled ISA diagnostic (53 named tests)
+make sim_sva              # SVA structural properties over 895 cycles
+```
+
+### Integration tests
+```bash
+make sim_soc_diag         # Full-SoC diagnostic firmware
+make sim_calculator       # Calculator demo (ADD/MUL/SUB/DIV via switches)
+make sim_benchmark        # Performance benchmark (CPI measurement)
+make sim_irq_demo         # Timer ISR + UART echo + 7-seg demo
+```
+
+### Official RISC-V test suite
+```bash
+make sim_riscv_tests      # All 47 official tests (rv32ui + rv32um)
+```
+
+---
+
+## Building Firmware
+
+```bash
+make compile_sw           # Minimal test program (main.c)
+make compile_isa_diag     # ISA regression firmware (isa_diag.S)
+make compile_soc_diag     # Full-SoC diagnostic (soc_diag.c)
+make compile_calculator   # Interactive calculator demo
+make compile_benchmark    # Performance benchmark
+make compile_irq_demo     # Timer interrupt demo (hardware build, 0.5 s interval)
+make compile_bootloader   # UART bootloader image (baked into IMEM top 1 KB)
+```
+
+Compiled `.mem` files are loaded into `imem` at simulation time via `$readmemh`.
+
+---
+
+## FPGA Programming
+
+### First-time setup (full synthesis)
+
+1. Open Vivado, create a project, add all files under `rtl/` and `constraints/nexys_a7.xdc`
+2. Set top module to `nexys_a7_top`
+3. Run Synthesis → Implementation → Generate Bitstream
+4. **Program Device** (JTAG) — makes the FPGA live
+5. **Program Configuration Memory** (`s25fl128sxxxxxx0-spi-x1_x2_x4`) — persists across power cycles
+
+> The FPGA must be live (JTAG-programmed first) before programming the SPI flash,
+> because Vivado uses the live FPGA as a proxy to reach the flash chip.
+
+### Fast firmware update (no re-synthesis)
+
+After a full synthesis run exists in `impl_1/`:
+
+```bash
+# Source Vivado tools first (WSL):
+source /mnt/c/Xilinx/Vivado/2025.2/settings64.sh
+
+# Patch the bitstream with new firmware (takes ~5 seconds):
+make update_bitstream PROG=sw/tests/calculator.elf
+# → produces nexys_a7_top_updated.bit
+# Then reprogram via Vivado Hardware Manager
+```
+
+### UART bootloader (no Vivado needed)
+
+Once the bootloader bitstream is in flash:
+```bash
+make compile_irq_demo          # or any other firmware
+python3 scripts/uart_upload.py sw/tests/irq_demo.bin /dev/ttyUSB0
+# Press CPU reset — new program runs immediately
+```
+
+The bootloader occupies the top 1 KB of IMEM (`0x7C00–0x7FFF`). Uploaded programs
+are written to `0x0000–0x7BFF` via the IMEM write window at `0x50000000`.
+
+---
+
+## Demo Programs
+
+| Program | Build target | What it does |
+|---------|-------------|--------------|
+| `soc_diag.c` | `compile_soc_diag` | Diagnostic: tests BSS/data init, DMEM, GPIO, timer, UART. Pass = LEDs 0xA5A5 |
+| `calculator.c` | `compile_calculator` | SW[7:0]=A, SW[15:8]=B, buttons select +/−/×/÷. Result on LEDs + 7-seg + UART |
+| `irq_demo.c` | `compile_irq_demo` | Timer ISR every 0.5 s: toggles LED[15], increments 7-seg counter, main loop echoes UART |
+| `benchmark.c` | `compile_benchmark` | 1000-iteration mixed workload; prints cycles, instructions, CPI, MIPS over UART |
+| `bootloader.c` | `compile_bootloader` | UART bootloader: receives `.bin` over serial, writes to IMEM, jumps to entry point |
+| `isa_diag.S` | `compile_isa_diag` | Assembly-level regression covering all RV32IM opcodes (53 named test cases) |
+
+---
+
+## Verification
+
+### Official RISC-V test suite — 47/47 passing
+
+| Group | Tests | Coverage |
+|-------|-------|----------|
+| rv32ui | 39 | All RV32I instructions including misaligned memory (`ma_data`) |
+| rv32um | 8 | All RV32M multiply/divide including edge cases (div-by-zero, INT_MIN/−1) |
+
+### Testbench suite
+
+| Testbench | Checks | What it verifies |
+|-----------|--------|-----------------|
+| `tb_alu.sv` | 11 | All ALU operations |
+| `tb_mdu.sv` | 20 | All MDU ops, divide-by-zero, signed overflow |
+| `tb_csr.sv` | 25 | All CSR instructions, trap entry, MRET, irq_pending |
+| `tb_cpu_csr.sv` | 10 | ECALL end-to-end, timer interrupt end-to-end |
+| `tb_cpu_exceptions.sv` | 34 | Illegal instr, EBREAK, misaligned fetch, FENCE, hardware misaligned load/store |
+| `tb_cpu_isa_diag.sv` | — | Runs compiled ISA diagnostic; checks pass signature |
+| `tb_cpu_regression.sv` | 10 | Load/store/branch/jump instruction mix |
+| `tb_sva.sv` | 5 | SVA structural properties over full ISA diagnostic run |
+| `tb_soc_diag.sv` | — | Full-SoC diagnostic firmware integration |
+| `tb_calculator.sv` | 13 | Calculator: ADD, MUL, SUB, DIV/0, DIV via UART |
+| `tb_irq_demo.sv` | — | Banner received, ISR fires ≥ 3×, LED[15] toggles, 7-seg non-zero |
+| `tb_benchmark.sv` | — | Benchmark completes, "Done" sentinel received |
 
 ---
 
 ## Project Structure
+
 ```
 risc-v-soc/
-├── rtl/                  # SystemVerilog RTL source files
-│   ├── core/             # CPU core (ALU, register file, FSM, datapath)
-│   ├── memory/           # Instruction and data memory (BRAM)
-│   └── peripheral/       # UART, Timer, GPIO
-├── tb/                   # Simulation testbenches
+├── rtl/
 │   ├── core/
+│   │   ├── cpu.sv              — top-level CPU (connects control_unit + datapath)
+│   │   ├── control_unit.sv     — multi-cycle FSM, all control signals
+│   │   ├── datapath.sv         — PC, register file, ALU, MDU, CSR file, mux network
+│   │   ├── csr_file.sv         — machine-mode CSRs (MSTATUS, MIE, MEPC, …, CYCLE)
+│   │   ├── mdu.sv              — multi-cycle multiply/divide unit (RV32M)
+│   │   ├── alu.sv              — combinational ALU (RV32I ops only)
+│   │   ├── register_file.sv    — 32×32 register file (x0 hardwired zero)
+│   │   ├── imm_gen.sv          — immediate decoder (all 6 immediate types)
+│   │   ├── alu_ops.sv          — ALU operation encodings
+│   │   └── riscv_pkg.sv        — shared constants (opcodes, states, CSR addresses)
 │   ├── memory/
-│   └── peripheral/
-├── sw/                   # Bare-metal software
-│   ├── startup/          # crt0.S — reset/startup code
-│   ├── drivers/          # C peripheral drivers
-│   ├── tests/            # Test programs
-│   └── linker/           # Linker script
-├── constraints/          # Nexys A7 XDC pin constraints
-├── scripts/              # Build helper scripts
-├── docs/                 # Memory map, register map, block diagrams
-└── Makefile              # Top-level build system
+│   │   ├── imem.sv             — 32 KB instruction ROM (with IMEM write window)
+│   │   └── dmem.sv             — 32 KB data RAM (byte-enable write port)
+│   ├── peripheral/
+│   │   ├── uart.sv             — UART TX/RX (configurable baud)
+│   │   ├── timer.sv            — 32-bit compare timer, sticky IRQ flag
+│   │   ├── gpio.sv             — 16-bit GPIO with direction register
+│   │   ├── sevenseg.sv         — 8-digit 7-segment display multiplexer
+│   │   └── spi_flash.sv        — SPI flash controller
+│   ├── soc_top.sv              — SoC integrator (CPU + memories + MMIO decoder)
+│   └── nexys_a7_top.sv         — FPGA top (clock, 2-FF reset synchronizer)
+├── tb/
+│   ├── core/                   — CPU and CSR unit testbenches
+│   ├── memory/                 — IMEM / DMEM testbenches
+│   ├── peripheral/             — Peripheral unit testbenches
+│   ├── integration/            — Full-SoC software integration testbenches
+│   └── riscv-tests/            — Official RISC-V test runner
+├── sw/
+│   ├── startup/crt0.S          — Reset handler: zero BSS, copy .data, call main()
+│   ├── startup/crt0_boot.S     — Bootloader reset handler
+│   ├── linker/linker.ld        — Linker script (IMEM + DMEM split)
+│   ├── linker/linker_boot.ld   — Bootloader linker script
+│   ├── drivers/                — C peripheral drivers (uart, gpio, timer, sevenseg, spi_flash)
+│   ├── tests/                  — Demo and test programs
+│   └── riscv-tests/            — riscv_test.h header for official test suite
+├── third_party/riscv-tests/    — Official RISC-V test suite (git submodule)
+├── constraints/nexys_a7.xdc    — Nexys A7-100T pin + bitstream constraints
+├── scripts/
+│   ├── bin_to_mem.py           — .bin → $readmemh .mem converter
+│   ├── make_boot_mem.py        — combines user slot + bootloader into one .mem
+│   └── uart_upload.py          — uploads .bin over serial to the bootloader
+├── docs/
+│   ├── memory_map.md           — Full MMIO register-level documentation
+│   └── CODES.md                — UART protocol codes for soc_diag
+├── Makefile                    — All build, simulation, and FPGA targets
+└── CLAUDE.md                   — Codebase guide and known issues
 ```
-
----
-
-## Hardware Target
-
-| Item | Detail |
-|------|--------|
-| Board | Digilent Nexys A7-100T |
-| FPGA | Xilinx Artix-7 XC7A100T |
-| HDL | SystemVerilog |
-| ISA | RISC-V RV32IM |
-| Implementation | Multi-cycle FSM |
-
----
-
-## Toolchain
-
-| Tool | Purpose |
-|------|---------|
-| Xilinx Vivado 2025.2 | Synthesis, implementation, FPGA programming |
-| Icarus Verilog + GTKWave | RTL simulation and waveform viewing |
-| Verilator | Fast cycle-accurate simulation for ISA tests |
-| riscv64-unknown-elf-gcc | Cross-compiler for bare-metal C and Assembly |
 
 ---
 
 ## Key References
 
-- [RISC-V Unprivileged ISA Specification](https://github.com/riscv/riscv-isa-manual/releases/download/Ratified-IMAFDQC/riscv-spec-20191213.pdf)
-- [RISC-V Privileged ISA Specification](https://github.com/riscv/riscv-isa-manual/releases/download/Priv-v1.12/riscv-privileged-20211203.pdf)
-- [Nexys A7 Reference Manual](https://digilent.com/reference/programmable-logic/nexys-a7/reference-manual)
+- [RISC-V Unprivileged ISA Specification v20191213](https://github.com/riscv/riscv-isa-manual/releases/download/Ratified-IMAFDQC/riscv-spec-20191213.pdf)
+- [RISC-V Privileged ISA Specification v1.12](https://github.com/riscv/riscv-isa-manual/releases/download/Priv-v1.12/riscv-privileged-20211203.pdf)
+- [Digilent Nexys A7 Reference Manual](https://digilent.com/reference/programmable-logic/nexys-a7/reference-manual)
 - [riscv-tests — Official ISA Test Suite](https://github.com/riscv-software-src/riscv-tests)
-
----
-
-## Build and Simulate
-```bash
-# Simulate ALU (available after Week 3)
-make sim_alu
-
-# Compile test software
-make compile_sw
-
-# Clean all generated files
-make clean
-```
-
----
-
-## Development Roadmap
-
-| Phase | Weeks | Milestone |
-|-------|-------|-----------|
-| 0 | — | Toolchain setup, repo initialization |
-| 1 | 1–2 | Architecture design, memory map, port declarations |
-| 2 | 3–4 | Multi-cycle RV32IM core + ISA regression tests |
-| 3 | 5–6 | BRAM memory + UART/Timer/GPIO peripherals |
-| 4 | 7–8 | Bare-metal software stack + FPGA boot demo |
-| 5 | 9–10 | Verification, FPGA metrics, documentation |
 
 ---
 
