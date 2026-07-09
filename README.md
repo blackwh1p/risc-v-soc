@@ -21,6 +21,119 @@ bare-metal software stack.
 
 ---
 
+## Installation
+
+### 1. Clone the repository
+
+```bash
+git clone --recurse-submodules https://github.com/blackwh1p/risc-v-soc.git
+cd risc-v-soc
+```
+
+If you already cloned without `--recurse-submodules`:
+
+```bash
+git submodule update --init --recursive
+```
+
+---
+
+### 2. Install dependencies
+
+#### Ubuntu / Debian / WSL2
+
+```bash
+# Icarus Verilog (simulator) — must be version 11 or later
+sudo apt update
+sudo apt install iverilog
+
+# Verify version (must be ≥ 11.0)
+iverilog -V
+
+# RISC-V cross-compiler
+sudo apt install gcc-riscv64-unknown-elf
+
+# Python 3 (for .bin → .mem conversion scripts)
+sudo apt install python3
+
+# GTKWave (optional — for viewing VCD waveforms)
+sudo apt install gtkwave
+```
+
+#### Toolchain version check
+
+```bash
+iverilog -V                          # must show 11.0 or later
+riscv64-unknown-elf-gcc --version    # must show GCC 12 or later
+python3 --version                    # must show 3.8 or later
+```
+
+> **Note for Ubuntu 20.04:** `apt install iverilog` may give version 10 which does not support SystemVerilog. If so, install a pre-built binary from the [Icarus Verilog GitHub releases](https://github.com/steveicarus/iverilog/releases) or build from source.
+
+> **Note for older GCC:** If GCC reports `error: unknown ISA extension zicsr`, change `-march=rv32im_zicsr` to `-march=rv32im` in the `CFLAGS` line in the Makefile. The generated code is identical.
+
+---
+
+### 3. Vivado (for FPGA programming only)
+
+Download and install [Xilinx Vivado 2025.2](https://www.xilinx.com/support/download.html) (WebPACK edition is free and sufficient). Required only for synthesizing and programming the Nexys A7 board. All simulations and firmware builds work without Vivado.
+
+---
+
+### 4. Verify the installation
+
+Run the full simulation suite — all tests must pass:
+
+```bash
+make sim_all
+```
+
+Expected output: every test prints `PASS` and ends with `$finish`. No `FAIL` lines should appear.
+
+---
+
+## Quick Start
+
+### Run a simulation
+
+```bash
+make sim_cpu          # basic CPU integration test
+make sim_calculator   # full-SoC calculator demo
+make sim_riscv_tests  # all 47 official RISC-V compliance tests
+```
+
+### View waveforms in GTKWave
+
+Every simulation produces a `.vcd` file. Open it after running:
+
+```bash
+make sim_cpu
+gtkwave sim_cpu.vcd
+```
+
+### Build and run a firmware program
+
+```bash
+# Compile the calculator demo
+make compile_calculator
+# → produces sw/tests/calculator.bin and sw/tests/calculator.mem
+
+# Simulate it
+make sim_calculator
+
+# Upload to hardware over UART (board must be running the bootloader)
+python3 scripts/uart_upload.py sw/tests/calculator.bin /dev/ttyUSB0
+```
+
+### Write your own program
+
+1. Create `sw/tests/myprogram.c`
+2. Add a compile target to the Makefile following the `compile_calculator` pattern
+3. Include `sw/startup/crt0.S` and use `sw/linker/linker.ld`
+4. Run `make compile_<yourprogram>` → upload `.bin` via UART or patch into bitstream
+
+---
+
 ## Architecture
 
 ### CPU Core
@@ -294,10 +407,8 @@ risc-v-soc/
 │   ├── make_boot_mem.py        — combines user slot + bootloader into one .mem
 │   └── uart_upload.py          — uploads .bin over serial to the bootloader
 ├── docs/
-│   ├── memory_map.md           — Full MMIO register-level documentation
-│   └── CODES.md                — UART protocol codes for soc_diag
-├── Makefile                    — All build, simulation, and FPGA targets
-└── CLAUDE.md                   — Codebase guide and known issues
+│   └── memory_map.md           — Full MMIO register-level documentation
+└── Makefile                    — All build, simulation, and FPGA targets
 ```
 
 ---
