@@ -41,6 +41,9 @@ module tb_gpio;
 
     // --- Test cases ---
     initial begin
+        $dumpfile("sim_gpio.vcd");
+        $dumpvars(0, tb_gpio);
+
 
         // --- Initialize signals ---
         rst_n         = 0;

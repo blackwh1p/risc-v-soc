@@ -62,6 +62,9 @@ module tb_benchmark;
     int         done_flag;
 
     initial begin
+        $dumpfile("sim_benchmark.vcd");
+        $dumpvars(0, tb_benchmark);
+
         rst_n      = 1'b0;
         cycle_count = 0;
         done_flag  = 0;

@@ -152,8 +152,11 @@ module tb_cpu_exceptions;
     // ----------------------------------------------------------
     // Single sequential initial block
     // ----------------------------------------------------------
+    integer i;
     initial begin
-        integer i;
+        $dumpfile("sim_cpu_exceptions.vcd");
+        $dumpvars(0, tb_cpu_exceptions);
+
         error_count = 0;
 
         // ==========================================================

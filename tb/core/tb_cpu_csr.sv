@@ -147,8 +147,11 @@ module tb_cpu_csr;
     // ----------------------------------------------------------
     // Single sequential initial block — avoids multi-driver races
     // ----------------------------------------------------------
+    integer i;
     initial begin
-        integer i;
+        $dumpfile("sim_cpu_csr.vcd");
+        $dumpvars(0, tb_cpu_csr);
+
         error_count  = 0;
         irq_m_timer  = 1'b0;
 

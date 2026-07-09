@@ -80,6 +80,9 @@ module tb_sevenseg;
     endtask
 
     initial begin
+        $dumpfile("sim_sevenseg.vcd");
+        $dumpvars(0, tb_sevenseg);
+
         error_count    = 0;
         reg_write_en   = 1'b0;
         reg_read_en    = 1'b0;

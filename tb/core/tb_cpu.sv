@@ -67,9 +67,12 @@ module tb_cpu;
     end
 
     // --- Test program ---
+    integer i;
     initial begin
+        $dumpfile("sim_cpu.vcd");
+        $dumpvars(0, tb_cpu);
+
         // Initialize memories to zero
-        integer i;
         for (i = 0; i < 256; i = i + 1) begin
             imem[i] = 32'b0;
             dmem[i] = 32'b0;

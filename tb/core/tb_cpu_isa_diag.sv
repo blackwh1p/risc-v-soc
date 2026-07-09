@@ -60,8 +60,11 @@ module tb_cpu_isa_diag;
         end
     end
 
+    integer i;
     initial begin
-        integer i;
+        $dumpfile("sim_cpu_isa.vcd");
+        $dumpvars(0, tb_cpu_isa_diag);
+
 
         for (i = 0; i < 8192; i = i + 1) begin
             imem[i] = 32'h00000013;

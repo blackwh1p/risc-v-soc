@@ -35,6 +35,9 @@ module tb_imem;
 
     // --- Test cases ---
         initial begin
+            $dumpfile("sim_imem.vcd");
+            $dumpvars(0, tb_imem);
+
             addr = 32'b0;
             data_addr = 32'b0;
             @(posedge clk);

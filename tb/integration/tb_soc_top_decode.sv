@@ -79,6 +79,9 @@ module tb_soc_top_decode;
     endtask
 
     initial begin
+        $dumpfile("sim_soc_decode.vcd");
+        $dumpvars(0, tb_soc_top_decode);
+
         error_count = 0;
         rst_n = 1'b0;
         uart_rx = 1'b1;

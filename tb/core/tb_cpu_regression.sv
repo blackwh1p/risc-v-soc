@@ -143,8 +143,11 @@ module tb_cpu_regression;
         end
     endtask
 
+    integer i;
     initial begin
-        integer i;
+        $dumpfile("sim_cpu_regression.vcd");
+        $dumpvars(0, tb_cpu_regression);
+
         for (i = 0; i < 256; i = i + 1) begin
             imem[i] = 32'h00000013; // NOP
             dmem[i] = 32'h00000000;

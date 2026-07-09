@@ -144,6 +144,9 @@ module tb_calculator;
 
     // --- Main test sequence ---
     initial begin
+        $dumpfile("sim_calculator.vcd");
+        $dumpvars(0, tb_calculator);
+
         error_count = 0;
         rst_n       = 1'b0;
         uart_rx     = 1'b1;

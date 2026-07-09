@@ -86,8 +86,11 @@ module tb_csr;
         val = csr_rdata;
     endtask
 
+    logic [31:0] val;
     initial begin
-        logic [31:0] val;
+        $dumpfile("sim_csr.vcd");
+        $dumpvars(0, tb_csr);
+
 
         // Defaults
         trap_en           = 1'b0;

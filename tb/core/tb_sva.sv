@@ -134,8 +134,11 @@ module tb_sva;
     localparam PASS_SIG = 32'h1A5A1A5A;
     localparam FAIL_SIG = 32'h0BAD0BAD;
 
+    integer i;
     initial begin
-        integer i;
+        $dumpfile("sim_sva.vcd");
+        $dumpvars(0, tb_sva);
+
         assert_fail_count = 0;
 
         for (i = 0; i < 8192; i++) begin

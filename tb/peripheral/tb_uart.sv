@@ -61,6 +61,9 @@ module tb_uart;
 
     // --- Test cases ---
     initial begin
+        $dumpfile("sim_uart.vcd");
+        $dumpvars(0, tb_uart);
+
         // Initialize signals
         rst_n         = 0;
         reg_write_en  = 0;

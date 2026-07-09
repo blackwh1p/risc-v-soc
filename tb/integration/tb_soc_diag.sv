@@ -82,6 +82,9 @@ module tb_soc_diag;
     endtask
 
     initial begin
+        $dumpfile("sim_soc_diag.vcd");
+        $dumpvars(0, tb_soc_diag);
+
         rst_n = 1'b0;
         uart_rx = 1'b1;
         switches = 16'h0000;  // switch value no longer affects test outcome

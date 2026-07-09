@@ -78,6 +78,9 @@ module tb_mdu;
     endtask
 
     initial begin
+        $dumpfile("sim_mdu.vcd");
+        $dumpvars(0, tb_mdu);
+
         rst_n       = 1'b0;
         start       = 1'b0;
         operation   = ALU_MUL;

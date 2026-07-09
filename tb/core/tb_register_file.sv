@@ -37,6 +37,9 @@ module tb_register_file;  // no ports — empty parentheses not needed
 
     // test cases
     initial begin
+        $dumpfile("sim_regfile.vcd");
+        $dumpvars(0, tb_register_file);
+
         write_enable = 0;
         write_addr = 5'b0;
         write_data = 32'b0;

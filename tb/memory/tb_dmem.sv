@@ -36,6 +36,9 @@ module tb_dmem;
 
     // --- Test cases ---
         initial begin
+            $dumpfile("sim_dmem.vcd");
+            $dumpvars(0, tb_dmem);
+
             addr = 32'b0;
             read_en = 0;
             write_en = 0;

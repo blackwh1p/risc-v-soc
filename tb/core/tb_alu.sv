@@ -27,6 +27,9 @@ module tb_alu;
 
     // Step 3 — Write the test cases
     initial begin
+        $dumpfile("sim_alu.vcd");
+        $dumpvars(0, tb_alu);
+
         // Test ADD: 5 + 3 = 8
         operation = ALU_ADD;
         operand_a = 32'd5;

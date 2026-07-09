@@ -71,10 +71,13 @@ module tb_riscv_tests;
     string mem_file;
     string dmem_file;
 
+    integer i;
+    integer cycle;
+    logic [31:0] tohost_val;
     initial begin
-        integer i;
-        integer cycle;
-        logic [31:0] tohost_val;
+        $dumpfile("sim_riscv_tests.vcd");
+        $dumpvars(0, tb_riscv_tests);
+
 
         if (!$value$plusargs("test=%s", test_path)) begin
             $display("ERROR: +test=<path> argument required");

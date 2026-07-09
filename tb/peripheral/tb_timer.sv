@@ -39,6 +39,9 @@ module tb_timer;
 
     // --- Test cases ---
     initial begin
+        $dumpfile("sim_timer.vcd");
+        $dumpvars(0, tb_timer);
+
 
         // --- Initialize signals ---
         rst_n         = 0;

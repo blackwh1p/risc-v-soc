@@ -83,6 +83,9 @@ module tb_spi_flash;
     logic [31:0] rdata;
 
     initial begin
+        $dumpfile("sim_spi_flash.vcd");
+        $dumpvars(0, tb_spi_flash);
+
         reg_write_en   = 1'b0;
         reg_read_en    = 1'b0;
         reg_addr       = 4'h0;

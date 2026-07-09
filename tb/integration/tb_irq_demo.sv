@@ -78,6 +78,9 @@ module tb_irq_demo;
     endtask
 
     initial begin
+        $dumpfile("sim_irq_demo.vcd");
+        $dumpvars(0, tb_irq_demo);
+
         rst_n = 1'b0; cycle_count = 0;
         banner_found = 0; irq_fires = 0;
         for (int i = 0; i < 8; i++) win[i] = 8'h00;
